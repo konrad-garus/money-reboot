@@ -1,6 +1,8 @@
 (ns money-reboot.core
   (:require [reagent.core :as reagent :refer [atom]]
-            [clojure.string :refer [split split-lines]]
+            [clojure.string :refer [split split-lines replace]]
+            [cljs-time.core :refer []]
+            [cljs-time.format :refer [formatter formatters parse unparse]]
             [money-reboot.category-index :refer [index]]))
 
 (enable-console-print!)
@@ -12,10 +14,19 @@
 (defonce app-state (atom {:text "Hello world!"}
                          {:cells []}))
 
+(def ddmmyyy (formatter "dd/MM/yyyy"))
+(def isodate (formatters :date))
+
+(defn process-row [[item amount date]]
+  (let [amount (replace amount #"," ".")
+        date (unparse isodate (parse ddmmyyy date))]
+    [item amount date]))
+
 (defn on-input [value]
-  (swap! app-state assoc :cells (map #(split % #"\t") (split-lines value)))
-  (js/console.log "plz" (clj->js (:cells @app-state)))
-  )
+  (let [cells (map #(split % #"\t") (split-lines value))
+        cells (map process-row cells)]
+    (swap! app-state assoc :cells cells)
+    (js/console.log "plz" (clj->js (:cells @app-state)))))
 
 (defn hello-world []
   [:div
