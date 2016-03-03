@@ -1,11 +1,6 @@
 (ns scripts.category-transformer
-  (:require [clojure.string :refer [split split-lines]]))
-
-(def blacklist #{"do"})
-
-(defn terms [line]
-  (filter #(not (blacklist %)) (split line #"\s+")))
-
+  (:require [clojure.string :refer [split split-lines]]
+            [money-reboot.category-guess :refer [terms]]))
 
 (defn rank-categories [counts [cat subcat item]]
   (let [words (terms item)
@@ -21,13 +16,8 @@
     (reduce rank-categories {} lines)))
 
 ; input = {[cat subcat word] count, [cat subcat word] count, ...}
-; output = {word [(cat subcat word count) (cat subcat word count)], word [(cat subcat word count) (cat subcat word count)]}
+; output = {word {[cat subcat] count, [cat subcat] count}, word {[cat subcat] count, [cat subcat] count}}
 (defn group-on-items [ranked]
-  (let [flat (map flatten ranked)]
-    (group-by #(nth % 2) flat)))
-
-; {word {[cat subcat] count, [cat subcat] count}
-(defn group-on-items-2 [ranked]
   (reduce
     (fn [index [[cat subcat word] count]]
       (let [index-entry (or (index word) {})
@@ -37,6 +27,6 @@
     ranked))
 
 (let [ranked (rank-from-file "data/categories.tsv")
-      index (group-on-items-2 ranked)]
+      index (group-on-items ranked)]
   (spit "src/cljs/money_reboot/category_index.cljs" (prn-str (list 'ns 'money-reboot.category-index)))
   (spit "src/cljs/money_reboot/category_index.cljs" (prn-str (list 'def 'index index)) :append true))

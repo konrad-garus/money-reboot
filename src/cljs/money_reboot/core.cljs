@@ -3,7 +3,8 @@
             [clojure.string :refer [split split-lines replace]]
             [cljs-time.core :refer []]
             [cljs-time.format :refer [formatter formatters parse unparse]]
-            [money-reboot.category-index :refer [index]]))
+            [money-reboot.category-index :refer [index]]
+            [money-reboot.category-guess :refer [terms]]))
 
 (enable-console-print!)
 
@@ -20,6 +21,7 @@
 (defn process-row [[item amount date]]
   (let [amount (replace amount #"," ".")
         date (unparse isodate (parse ddmmyyy date))]
+    (js/console.log (terms item))
     [item amount date]))
 
 (defn on-input [value]
@@ -34,20 +36,10 @@
     [:textarea {:rows 15
                 :on-change #(-> % .-target .-value on-input)}]
     [:table
-     (map (fn [row] [:tr (map (fn [cell] [:td cell]) row)]) (:cells @app-state))
-     ]]
-  )
+     (map (fn [row] [:tr (map (fn [cell] [:td cell]) row)]) (:cells @app-state))]])
 
 (reagent/render-component [hello-world]
                           (. js/document (getElementById "app")))
-
-; TODO: terms in cljx
-;(defn guess [index sentence]
-;  (let [words (terms sentence)
-;        guesses (map index words)]
-;    (reverse (sort-by second (apply merge-with + guesses)))
-;  ))
-
 
 (defn on-js-reload []
   ;; optionally touch your app-state to force rerendering depending on
