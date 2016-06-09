@@ -13,3 +13,4 @@ pom.xml
 .nrepl-port
 data/categories.tsv
 src/cljs/money_reboot/category_index.cljs
+node_modules
